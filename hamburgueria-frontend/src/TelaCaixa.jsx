@@ -3,15 +3,16 @@ import PedidoCard from './PedidoCard.jsx';
 
 const API_URL = 'https://hamburgueria-production-ea67.up.railway.app/api/pedidos';
 
-export default function TelaCaixa({ pedidos, produtos, config }) {
+export default function TelaCaixa({ pedidos, produtos, taxasEntrega }) {
   const [cliente, setCliente] = useState('');
   const [telefone, setTelefone] = useState('');
   const [endereco, setEndereco] = useState('');
   const [observacoes, setObservacoes] = useState('');
   const [quantidades, setQuantidades] = useState({}); // { produtoId: qtd }
-  const [comEntrega, setComEntrega] = useState(false);
+  const [taxaEntregaId, setTaxaEntregaId] = useState(''); // '' = retirada / sem entrega
 
-  const taxaEntrega = config.taxaEntrega || 0;
+  const taxaSelecionada = taxasEntrega.find(t => t.id === taxaEntregaId);
+  const valorTaxa = taxaSelecionada ? taxaSelecionada.taxa : 0;
 
   const itensSelecionados = useMemo(() => {
     return produtos
@@ -24,7 +25,7 @@ export default function TelaCaixa({ pedidos, produtos, config }) {
     [itensSelecionados]
   );
 
-  const total = subtotal + (comEntrega ? taxaEntrega : 0);
+  const total = subtotal + valorTaxa;
 
   function alterarQuantidade(produtoId, delta) {
     setQuantidades(prev => {
@@ -43,9 +44,12 @@ export default function TelaCaixa({ pedidos, produtos, config }) {
     await fetch(API_URL, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ cliente, telefone, endereco, itens: itensSelecionados, observacoes, comEntrega })
+      body: JSON.stringify({
+        cliente, telefone, endereco, itens: itensSelecionados, observacoes,
+        taxaEntregaId: taxaEntregaId || null
+      })
     });
-    setCliente(''); setTelefone(''); setEndereco(''); setObservacoes(''); setQuantidades({}); setComEntrega(false);
+    setCliente(''); setTelefone(''); setEndereco(''); setObservacoes(''); setQuantidades({}); setTaxaEntregaId('');
   }
 
   return (
@@ -81,10 +85,22 @@ export default function TelaCaixa({ pedidos, produtos, config }) {
 
         <textarea placeholder="Observações" value={observacoes} onChange={e => setObservacoes(e.target.value)} style={{ display: 'block', width: '100%', margin: '8px 0' }} />
 
-        <label style={{ display: 'flex', alignItems: 'center', gap: 8, margin: '10px 0' }}>
-          <input type="checkbox" checked={comEntrega} onChange={e => setComEntrega(e.target.checked)} />
-          Entrega (+ R$ {taxaEntrega.toFixed(2)})
-        </label>
+        <label style={{ display: 'block', marginBottom: 4 }}>Entrega</label>
+        <select
+          value={taxaEntregaId}
+          onChange={e => setTaxaEntregaId(e.target.value)}
+          style={{ display: 'block', width: '100%', marginBottom: 10, padding: 8 }}
+        >
+          <option value="">Retirada no local (sem taxa)</option>
+          {taxasEntrega.map(t => (
+            <option key={t.id} value={t.id}>{t.bairro} — R$ {t.taxa.toFixed(2)}</option>
+          ))}
+        </select>
+        {taxasEntrega.length === 0 && (
+          <p style={{ color: '#666', fontSize: 12, marginTop: -6 }}>
+            Nenhum bairro cadastrado. Cadastre em "⚙️ Configurações".
+          </p>
+        )}
 
         <div style={{ fontSize: 14, color: '#555' }}>Subtotal: R$ {subtotal.toFixed(2)}</div>
         <div style={{ fontSize: 18, fontWeight: 700, margin: '4px 0 10px' }}>

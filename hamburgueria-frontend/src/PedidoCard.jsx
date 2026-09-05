@@ -48,8 +48,8 @@ export default function PedidoCard({ pedido, mostrarAcao = true }) {
         ))}
       </ul>
       {pedido.observacoes && <div style={{ fontSize: 13 }}>Obs: {pedido.observacoes}</div>}
-      {pedido.comEntrega && (
-        <div style={{ fontSize: 13 }}>🛵 Entrega: R$ {(pedido.taxaEntrega || 0).toFixed(2)}</div>
+      {pedido.bairroEntrega && (
+        <div style={{ fontSize: 13 }}>🛵 Entrega ({pedido.bairroEntrega}): R$ {(pedido.taxaEntrega || 0).toFixed(2)}</div>
       )}
       {typeof pedido.total === 'number' && (
         <div style={{ fontWeight: 700, marginTop: 4 }}>Total: R$ {pedido.total.toFixed(2)}</div>
