@@ -26,6 +26,8 @@ export default function PedidoCard({ pedido, mostrarAcao = true }) {
     });
   }
 
+  const itens = Array.isArray(pedido.itens) ? pedido.itens : [];
+
   return (
     <div style={{
       border: '1px solid #e5e7eb',
@@ -37,9 +39,21 @@ export default function PedidoCard({ pedido, mostrarAcao = true }) {
       <strong>{pedido.cliente}</strong> — {pedido.telefone}
       <div style={{ fontSize: 13, color: '#555' }}>{pedido.endereco}</div>
       <ul style={{ margin: '6px 0' }}>
-        {pedido.itens.map((item, i) => <li key={i}>{item}</li>)}
+        {itens.map((item, i) => (
+          <li key={i}>
+            {typeof item === 'string'
+              ? item
+              : `${item.quantidade}x ${item.nome} — R$ ${(item.preco * item.quantidade).toFixed(2)}`}
+          </li>
+        ))}
       </ul>
       {pedido.observacoes && <div style={{ fontSize: 13 }}>Obs: {pedido.observacoes}</div>}
+      {pedido.comEntrega && (
+        <div style={{ fontSize: 13 }}>🛵 Entrega: R$ {(pedido.taxaEntrega || 0).toFixed(2)}</div>
+      )}
+      {typeof pedido.total === 'number' && (
+        <div style={{ fontWeight: 700, marginTop: 4 }}>Total: R$ {pedido.total.toFixed(2)}</div>
+      )}
       <div style={{ marginTop: 8, fontWeight: 600, textTransform: 'uppercase', fontSize: 12 }}>
         {pedido.status}
       </div>
