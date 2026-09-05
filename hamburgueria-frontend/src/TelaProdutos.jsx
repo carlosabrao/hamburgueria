@@ -1,6 +1,5 @@
 import React, { useState } from 'react';
-
-const API_URL = 'https://hamburgueria-production-ea67.up.railway.app/api/produtos';
+import { apiFetch } from './api.js';
 
 export default function TelaProdutos({ produtos }) {
   const [nome, setNome] = useState('');
@@ -10,15 +9,13 @@ export default function TelaProdutos({ produtos }) {
   async function salvarProduto(e) {
     e.preventDefault();
     if (editandoId) {
-      await fetch(`${API_URL}/${editandoId}`, {
+      await apiFetch(`/api/produtos/${editandoId}`, {
         method: 'PUT',
-        headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ nome, preco })
       });
     } else {
-      await fetch(API_URL, {
+      await apiFetch('/api/produtos', {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ nome, preco })
       });
     }
@@ -33,7 +30,7 @@ export default function TelaProdutos({ produtos }) {
 
   async function excluir(id) {
     if (!confirm('Excluir este produto?')) return;
-    await fetch(`${API_URL}/${id}`, { method: 'DELETE' });
+    await apiFetch(`/api/produtos/${id}`, { method: 'DELETE' });
   }
 
   return (

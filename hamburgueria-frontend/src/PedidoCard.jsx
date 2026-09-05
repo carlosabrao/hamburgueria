@@ -1,6 +1,5 @@
 import React from 'react';
-
-const API_URL = 'https://hamburgueria-production-ea67.up.railway.app/api/pedidos';
+import { apiFetch } from './api.js';
 
 const proximoStatus = {
   pendente: 'preparando',
@@ -19,16 +18,15 @@ export default function PedidoCard({ pedido, mostrarAcao = true }) {
   async function avancarStatus() {
     const novo = proximoStatus[pedido.status];
     if (!novo) return;
-    await fetch(`${API_URL}/${pedido.id}`, {
+    await apiFetch(`/api/pedidos/${pedido.id}`, {
       method: 'PUT',
-      headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ status: novo })
     });
   }
 
   async function excluirPedido() {
     if (!confirm(`Excluir o pedido de ${pedido.cliente}?`)) return;
-    await fetch(`${API_URL}/${pedido.id}`, { method: 'DELETE' });
+    await apiFetch(`/api/pedidos/${pedido.id}`, { method: 'DELETE' });
   }
 
   const itens = Array.isArray(pedido.itens) ? pedido.itens : [];

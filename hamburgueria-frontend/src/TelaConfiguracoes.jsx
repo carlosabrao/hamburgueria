@@ -1,6 +1,5 @@
 import React, { useState } from 'react';
-
-const API_URL = 'https://hamburgueria-production-ea67.up.railway.app/api/taxas-entrega';
+import { apiFetch } from './api.js';
 
 export default function TelaConfiguracoes({ taxasEntrega }) {
   const [bairro, setBairro] = useState('');
@@ -10,15 +9,13 @@ export default function TelaConfiguracoes({ taxasEntrega }) {
   async function salvar(e) {
     e.preventDefault();
     if (editandoId) {
-      await fetch(`${API_URL}/${editandoId}`, {
+      await apiFetch(`/api/taxas-entrega/${editandoId}`, {
         method: 'PUT',
-        headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ bairro, taxa })
       });
     } else {
-      await fetch(API_URL, {
+      await apiFetch('/api/taxas-entrega', {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ bairro, taxa })
       });
     }
@@ -33,7 +30,7 @@ export default function TelaConfiguracoes({ taxasEntrega }) {
 
   async function excluir(id) {
     if (!confirm('Excluir esta taxa de entrega?')) return;
-    await fetch(`${API_URL}/${id}`, { method: 'DELETE' });
+    await apiFetch(`/api/taxas-entrega/${id}`, { method: 'DELETE' });
   }
 
   return (

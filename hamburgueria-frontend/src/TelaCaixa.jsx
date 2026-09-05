@@ -1,7 +1,6 @@
 import React, { useState, useMemo } from 'react';
 import PedidoCard from './PedidoCard.jsx';
-
-const API_URL = 'https://hamburgueria-production-ea67.up.railway.app/api/pedidos';
+import { apiFetch } from './api.js';
 
 export default function TelaCaixa({ pedidos, produtos, taxasEntrega }) {
   const [cliente, setCliente] = useState('');
@@ -41,9 +40,8 @@ export default function TelaCaixa({ pedidos, produtos, taxasEntrega }) {
       alert('Selecione ao menos um produto.');
       return;
     }
-    await fetch(API_URL, {
+    await apiFetch('/api/pedidos', {
       method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({
         cliente, telefone, endereco, itens: itensSelecionados, observacoes,
         taxaEntregaId: taxaEntregaId || null
