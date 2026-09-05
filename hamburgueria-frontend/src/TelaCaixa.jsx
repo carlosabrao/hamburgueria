@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import PedidoCard from './PedidoCard.jsx';
 
-const API_URL = 'http://localhost:3001/api/pedidos';
+const API_URL = 'https://hamburgueria-production-ea67.up.railway.app/api/pedidos';
 
 export default function TelaCaixa({ pedidos }) {
   const [cliente, setCliente] = useState('');
