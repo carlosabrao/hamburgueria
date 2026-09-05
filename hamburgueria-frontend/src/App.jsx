@@ -5,7 +5,7 @@ import TelaCozinha from './TelaCozinha.jsx';
 
 // ⚠️ Ao publicar (deploy), troque pela URL do backend no Railway,
 // ex: const socket = io('https://seu-projeto-production-xxxx.railway.app');
-const socket = io('http://localhost:3001');
+const socket = io('https://hamburgueria-production-ea67.up.railway.app');
 
 export default function App() {
   const [pedidos, setPedidos] = useState([]);
