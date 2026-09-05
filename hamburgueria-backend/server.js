@@ -8,11 +8,36 @@ const path = require('path');
 const app = express();
 const server = http.createServer(app);
 
+// Senha única de acesso ao sistema (defina APP_PASSWORD no Railway para trocar)
+const SENHA_APP = process.env.APP_PASSWORD || 'duobrasa123';
+
 app.use(cors({ origin: '*' }));
 app.use(express.json());
 
 const io = new Server(server, {
   cors: { origin: '*', methods: ['GET', 'POST', 'PUT', 'DELETE'] }
+});
+
+// Login: valida a senha e devolve OK (o front guarda a senha e reenvia em cada chamada)
+app.post('/api/login', (req, res) => {
+  if (req.body.senha === SENHA_APP) {
+    res.json({ ok: true });
+  } else {
+    res.status(401).json({ ok: false, erro: 'Senha incorreta' });
+  }
+});
+
+// Protege todas as rotas /api, exceto /api/login
+app.use('/api', (req, res, next) => {
+  if (req.path === '/login') return next();
+  if (req.headers['x-app-password'] === SENHA_APP) return next();
+  res.status(401).json({ erro: 'Não autorizado' });
+});
+
+// Protege a conexão em tempo real (Socket.io)
+io.use((socket, next) => {
+  if (socket.handshake.auth?.senha === SENHA_APP) return next();
+  next(new Error('Não autorizado'));
 });
 
 const PEDIDOS_FILE = path.join(__dirname, 'pedidos.json');
