@@ -17,7 +17,7 @@ const io = new Server(server, {
 
 const PEDIDOS_FILE = path.join(__dirname, 'pedidos.json');
 const PRODUTOS_FILE = path.join(__dirname, 'produtos.json');
-const CONFIG_FILE = path.join(__dirname, 'config.json');
+const TAXAS_FILE = path.join(__dirname, 'taxasEntrega.json');
 
 function lerJSON(file, padrao) {
   if (!fs.existsSync(file)) fs.writeFileSync(file, JSON.stringify(padrao));
@@ -27,21 +27,45 @@ function salvarJSON(file, dados) {
   fs.writeFileSync(file, JSON.stringify(dados, null, 2));
 }
 
-/* ---------- CONFIG (taxa de entrega, etc.) ---------- */
+/* ---------- TAXAS DE ENTREGA (por bairro) ---------- */
 
-app.get('/api/config', (req, res) => {
-  res.json(lerJSON(CONFIG_FILE, { taxaEntrega: 0 }));
+app.get('/api/taxas-entrega', (req, res) => {
+  res.json(lerJSON(TAXAS_FILE, []));
 });
 
-app.put('/api/config', (req, res) => {
-  const config = lerJSON(CONFIG_FILE, { taxaEntrega: 0 });
-  const novaConfig = {
-    ...config,
-    taxaEntrega: req.body.taxaEntrega !== undefined ? Number(req.body.taxaEntrega) : config.taxaEntrega
+app.post('/api/taxas-entrega', (req, res) => {
+  const taxas = lerJSON(TAXAS_FILE, []);
+  const nova = {
+    id: Date.now().toString(),
+    bairro: req.body.bairro || '',
+    taxa: Number(req.body.taxa) || 0
   };
-  salvarJSON(CONFIG_FILE, novaConfig);
-  io.emit('config:atualizada', novaConfig);
-  res.json(novaConfig);
+  taxas.push(nova);
+  salvarJSON(TAXAS_FILE, taxas);
+  io.emit('taxas:atualizadas', taxas);
+  res.status(201).json(nova);
+});
+
+app.put('/api/taxas-entrega/:id', (req, res) => {
+  const taxas = lerJSON(TAXAS_FILE, []);
+  const idx = taxas.findIndex(t => t.id === req.params.id);
+  if (idx === -1) return res.status(404).json({ erro: 'Taxa não encontrada' });
+  taxas[idx] = {
+    ...taxas[idx],
+    bairro: req.body.bairro ?? taxas[idx].bairro,
+    taxa: req.body.taxa !== undefined ? Number(req.body.taxa) : taxas[idx].taxa
+  };
+  salvarJSON(TAXAS_FILE, taxas);
+  io.emit('taxas:atualizadas', taxas);
+  res.json(taxas[idx]);
+});
+
+app.delete('/api/taxas-entrega/:id', (req, res) => {
+  let taxas = lerJSON(TAXAS_FILE, []);
+  taxas = taxas.filter(t => t.id !== req.params.id);
+  salvarJSON(TAXAS_FILE, taxas);
+  io.emit('taxas:atualizadas', taxas);
+  res.status(204).end();
 });
 
 /* ---------- PRODUTOS ---------- */
@@ -92,13 +116,22 @@ app.get('/api/pedidos', (req, res) => {
 });
 
 // itens esperado: [{ nome, preco, quantidade }]
-// comEntrega: boolean (opcional)
+// taxaEntregaId: id de uma taxa cadastrada (opcional, null/omitido = retirada, sem entrega)
 app.post('/api/pedidos', (req, res) => {
   const pedidos = lerJSON(PEDIDOS_FILE, []);
-  const config = lerJSON(CONFIG_FILE, { taxaEntrega: 0 });
+  const taxas = lerJSON(TAXAS_FILE, []);
   const itens = Array.isArray(req.body.itens) ? req.body.itens : [];
-  const comEntrega = !!req.body.comEntrega;
-  const taxaEntrega = comEntrega ? (config.taxaEntrega || 0) : 0;
+
+  let bairroEntrega = null;
+  let taxaEntrega = 0;
+  if (req.body.taxaEntregaId) {
+    const taxaEscolhida = taxas.find(t => t.id === req.body.taxaEntregaId);
+    if (taxaEscolhida) {
+      bairroEntrega = taxaEscolhida.bairro;
+      taxaEntrega = taxaEscolhida.taxa;
+    }
+  }
+
   const subtotal = itens.reduce((soma, item) => soma + (Number(item.preco) || 0) * (Number(item.quantidade) || 0), 0);
   const total = subtotal + taxaEntrega;
 
@@ -108,7 +141,7 @@ app.post('/api/pedidos', (req, res) => {
     telefone: req.body.telefone || '',
     endereco: req.body.endereco || '',
     itens,
-    comEntrega,
+    bairroEntrega,
     taxaEntrega,
     subtotal,
     total,
@@ -145,7 +178,7 @@ app.delete('/api/pedidos/:id', (req, res) => {
 io.on('connection', (socket) => {
   socket.emit('pedidos:atualizados', lerJSON(PEDIDOS_FILE, []));
   socket.emit('produtos:atualizados', lerJSON(PRODUTOS_FILE, []));
-  socket.emit('config:atualizada', lerJSON(CONFIG_FILE, { taxaEntrega: 0 }));
+  socket.emit('taxas:atualizadas', lerJSON(TAXAS_FILE, []));
 });
 
 const PORT = process.env.PORT || 3001;
