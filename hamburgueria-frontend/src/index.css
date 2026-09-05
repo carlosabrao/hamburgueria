@@ -1,0 +1,21 @@
+body {
+  margin: 0;
+  background: #f9fafb;
+  color: #111827;
+}
+button {
+  cursor: pointer;
+  padding: 8px 14px;
+  border-radius: 6px;
+  border: 1px solid #d1d5db;
+  background: white;
+}
+button:disabled {
+  background: #111827;
+  color: white;
+}
+input, textarea {
+  padding: 8px;
+  border-radius: 6px;
+  border: 1px solid #d1d5db;
+}
