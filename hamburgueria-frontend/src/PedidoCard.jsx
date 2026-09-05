@@ -1,6 +1,6 @@
 import React from 'react';
 
-const API_URL = 'http://localhost:3001/api/pedidos';
+const API_URL = 'https://hamburgueria-production-ea67.up.railway.app/api/pedidos';
 
 const proximoStatus = {
   pendente: 'preparando',
