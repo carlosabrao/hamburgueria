@@ -26,6 +26,11 @@ export default function PedidoCard({ pedido, mostrarAcao = true }) {
     });
   }
 
+  async function excluirPedido() {
+    if (!confirm(`Excluir o pedido de ${pedido.cliente}?`)) return;
+    await fetch(`${API_URL}/${pedido.id}`, { method: 'DELETE' });
+  }
+
   const itens = Array.isArray(pedido.itens) ? pedido.itens : [];
 
   return (
@@ -62,6 +67,9 @@ export default function PedidoCard({ pedido, mostrarAcao = true }) {
           Avançar para "{proximoStatus[pedido.status]}"
         </button>
       )}
+      <button onClick={excluirPedido} style={{ marginTop: 8, marginLeft: 8, color: '#dc2626' }}>
+        Excluir
+      </button>
     </div>
   );
 }
